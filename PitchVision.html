@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PitchVision — Football Stats Tracker</title>
+  <style>
+    :root{--card:#fff;--bg:#f3f6fb;--accent:#164e63}
+    *{box-sizing:border-box}
+    body{font-family:Inter,Segoe UI,Arial,sans-serif;margin:0;background:var(--bg);color:#0f172a}
+    .container{max-width:980px;margin:28px auto;padding:20px}
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(16,24,40,0.06)}
+    h1{margin:0 0 6px;font-size:22px}
+    h2{margin:10px 0}
+    label{display:block;margin:8px 0;font-size:14px}
+    input[type=text],input[type=password],input[type=number],input[type=date],select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #d1d5db}
+    button{background:var(--accent);color:white;border:none;padding:10px 14px;border-radius:8px;cursor:pointer}
+    .row{display:flex;gap:12px}
+    .col{flex:1}
+    nav{display:flex;gap:8px;margin-bottom:12px}
+    .small{font-size:13px;color:#475569}
+    .hidden{display:none}
+    .logo-preview{height:60px;width:60px;border-radius:8px;object-fit:cover;border:1px solid #e2e8f0}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px;border-bottom:1px solid #e6eef6;text-align:left}
+    .muted{color:#64748b;font-size:13px}
+    .chip{display:inline-block;padding:6px 8px;background:#eef2ff;border-radius:999px;font-size:13px}
+    .danger{background:#fee2e2;color:#b91c1c}
+    footer{margin-top:16px;font-size:13px;color:#475569}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="app">
+      <!-- NAV / Pages -->
+      <div id="authPages" class="card">
+        <h1>PitchVision</h1>
+        <p class="small">Sign up or log in — your data is stored locally on this device (localhost).</p>
+
+        <div style="display:flex;gap:12px;margin-top:12px;">
+          <div style="flex:1">
+            <h2>Sign up</h2>
+            <label>First name<input id="su_first" type="text" placeholder="First name"></label>
+            <label>Last name<input id="su_last" type="text" placeholder="Last name"></label>
+            <label>Password<input id="su_pass" type="password" placeholder="Create password"></label>
+            <label>Club name<input id="su_club" type="text" placeholder="Your club"></label>
+            <label>Upload club logo<input id="su_clublogo" type="file" accept="image/*"></label>
+            <div style="margin-top:8px"><button onclick="signup()">Create account</button></div>
+            <p id="su_msg" class="muted"></p>
+          </div>
+
+          <div style="flex:1">
+            <h2>Login</h2>
+            <label>First name<input id="li_first" type="text" placeholder="First name"></label>
+            <label>Last name<input id="li_last" type="text" placeholder="Last name"></label>
+            <label>Password<input id="li_pass" type="password" placeholder="Password"></label>
+            <div style="margin-top:8px"><button onclick="login()">Log in</button></div>
+            <p id="li_msg" class="muted"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- APP PAGES -->
+      <div id="mainApp" class="hidden">
+        <nav>
+          <div class="chip" id="nav_profile_btn">Profile</div>
+          <div class="chip" id="nav_matches_btn">Matches</div>
+          <div class="chip" id="nav_stats_btn">Stats</div>
+          <div style="flex:1"></div>
+          <div class="chip" onclick="logout()">Logout</div>
+        </nav>
+
+        <div class="chip" id="nav_team_btn">Team</div>
+
+        <!-- PROFILE -->
+        <div id="profilePage" class="card">
+          <div style="display:flex;gap:12px;align-items:center">
+            <div style="flex:1">
+              <h1 id="welcome">Welcome, Player</h1>
+              <p id="clubName" class="muted"></p>
+            </div>
+            <div style="text-align:right">
+              <img id="clubLogoPreview" class="logo-preview" alt="club logo">
+            </div>
+          </div>
+
+          <h2>Your profile</h2>
+          <div class="row">
+            <div class="col">
+              <label>Position<input id="p_position" type="text" placeholder="e.g., LW, CM, CB"></label>
+            </div>
+            <div class="col">
+              <label>Shirt number<input id="p_number" type="number" min="0"></label>
+            </div>
+            <div class="col">
+              <label>Preferred foot<select id="p_foot"><option>Right</option><option>Left</option><option>Both</option></select></label>
+            </div>
+          </div>
+          <label>Upload/Change club logo<input id="p_uploadlogo" type="file" accept="image/*"></label>
+          <div style="margin-top:8px"><button onclick="saveProfile()">Save profile</button></div>
+          <p id="profile_msg" class="muted"></p>
+        </div>
+
+        <!-- MATCHES -->
+        <div id="matchesPage" class="card hidden" style="margin-top:12px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <h2 style="margin:0;flex:1">Matches</h2>
+            <div><button onclick="showCreateMatchDialog()">+ Add match</button></div>
+          </div>
+
+          <div id="matchesList" style="margin-top:12px"></div>
+
+          <!-- CREATE MATCH -->
+          <div id="createMatch" class="hidden" style="margin-top:12px">
+            <h3>Create match</h3>
+            <div class="row">
+              <div class="col"><label>Opponent name<input id="m_opponent" type="text"></label></div>
+              <div class="col"><label>Venue<input id="m_venue" type="text" placeholder="Home/Away"></label></div>
+              <div class="col"><label>Competition<select id="m_comp"><option>League</option><option>Cup</option><option>Friendly</option></select></label></div>
+            </div>
+            <div class="row">
+              <div class="col"><label>Your score<input id="m_score_you" type="number" min="0" value="0"></label></div>
+              <div class="col"><label>Opp. score<input id="m_score_opp" type="number" min="0" value="0"></label></div>
+              <div class="col"><label>Opponent logo<input id="m_oplogo" type="file" accept="image/*"></label></div>
+            </div>
+            <div style="margin-top:8px"><button onclick="createMatch()">Save match</button> <button onclick="hideCreateMatchDialog()" class="danger">Cancel</button></div>
+            <p id="create_msg" class="muted"></p>
+          </div>
+
+          <!-- EDIT MATCH -->
+          <div id="editMatch" class="hidden" style="margin-top:12px">
+            <h3>Edit match</h3>
+            <div class="row">
+              <div class="col">
+                <label>Match date<input id="e_date" type="date"></label>
+              </div>
+              <div class="col">
+                <label>Status<select id="e_status"><option value="not played">Not played</option><option value="played">Played</option></select></label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col"><label>Opponent name<input id="e_opponent" type="text"></label></div>
+              <div class="col"><label>Venue<input id="e_venue" type="text"></label></div>
+              <div class="col"><label>Competition<select id="e_comp"><option>League</option><option>Cup</option><option>Friendly</option></select></label></div>
+            </div>
+            <div class="row">
+              <div class="col"><label>Your score<input id="e_score_you" type="number" min="0"></label></div>
+              <div class="col"><label>Opp. score<input id="e_score_opp" type="number" min="0"></label></div>
+              <div class="col"><label>Opponent logo<input id="e_oplogo" type="file" accept="image/*"></label></div>
+            </div>
+            <div style="margin-top:8px">
+              <button onclick="saveEditedMatch()">Save changes</button>
+              <button onclick="hideEditMatch()" class="danger">Cancel</button>
+            </div>
+            <p id="edit_msg" class="muted"></p>
+          </div>
+        </div>
+
+        <!-- STATS -->
+        <div id="statsPage" class="card hidden" style="margin-top:12px">
+          <h2>Stats</h2>
+          <div id="statsSummary"></div>
+          <div id="statsBreakdown" style="margin-top:12px"></div>
+        </div>
+
+        <!-- TEAM + LEAGUE TABLE -->
+        <div id="teamPage" class="card hidden" style="margin-top:12px">
+          <h2>Team & League Table</h2>
+          <p class="small">Your club squad and current league standings.</p>
+
+          <h3>Your League: Testway Youth Football League — U14 Division 4</h3>
+
+          <table>
+            <tr><th>POS</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>PTS</th></tr>
+            <tr><td>1</td><td>Braishfield Bees Youth U14 Gold</td><td>4</td><td>3</td><td>1</td><td>0</td><td>10</td></tr>
+            <tr><td>2</td><td>Littleton Juniors Youth U14 Kites</td><td>3</td><td>3</td><td>0</td><td>0</td><td>9</td></tr>
+            <tr><td>3</td><td>Amesbury Junior FC U14 Spitfires</td><td>2</td><td>1</td><td>1</td><td>0</td><td>4</td></tr>
+            <tr><td>4</td><td>Pace Youth U14 Lions</td><td>4</td><td>1</td><td>1</td><td>2</td><td>4</td></tr>
+            <tr><td>5</td><td>Hotspire Football Club U14</td><td>3</td><td>0</td><td>1</td><td>2</td><td>1</td></tr>
+            <tr><td>6</td><td>Overton Youth U14 Blues</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+            <tr><td>7</td><td>CK Andover Youth U14</td><td>3</td><td>0</td><td>0</td><td>3</td><td>0</td></tr>
+          </table>
+        </div>
+
+        <footer class="muted">PitchVision — Your local football performance tracker. Data stored in your browser only.</footer>
+      </div>
+    </div>
+  </div>
+
+<script>
+function readStorage(key){try{return JSON.parse(localStorage.getItem(key)||'null')}catch(e){return null}}
+function writeStorage(key,val){localStorage.setItem(key,JSON.stringify(val))}
+const USERS_KEY='pv_users';
+const CURR_KEY='pv_current';
+function getUsers(){return readStorage(USERS_KEY)||[]}
+function saveUsers(u){writeStorage(USERS_KEY,u)}
+function getCurrent(){return readStorage(CURR_KEY)}
+function setCurrent(u){writeStorage(CURR_KEY,u)}
+function clearCurrent(){localStorage.removeItem(CURR_KEY)}
+function fileToDataUrl(file, cb){if(!file){cb(null);return}const r=new FileReader();r.onload=e=>cb(e.target.result);r.readAsDataURL(file)}
+
+// --- AUTH ---
+function signup(){
+  const first=document.getElementById('su_first').value.trim();
+  const last=document.getElementById('su_last').value.trim();
+  const pass=document.getElementById('su_pass').value;
+  const club=document.getElementById('su_club').value.trim();
+  const logoInput=document.getElementById('su_clublogo');
+  const msg=document.getElementById('su_msg');
+  msg.textContent='';
+  if(!first||!last||!pass||!club){msg.textContent='Complete all fields.';return}
+  const users=getUsers();
+  if(users.find(x=>x.first.toLowerCase()===first.toLowerCase()&&x.last.toLowerCase()===last.toLowerCase())){msg.textContent='Account with that name exists.';return}
+  fileToDataUrl(logoInput.files[0], logoData => {
+    const user={id:Date.now(),first,last,pass,club,clubLogo:logoData||null,profile:{position:'',number:'',foot:'Right'},matches:[]};
+    users.push(user); saveUsers(users); setCurrent({userId:user.id});
+    msg.textContent='Account created — redirecting...';
+    renderApp();
+  });
+}
+
+function login(){
+  const first=document.getElementById('li_first').value.trim();
+  const last=document.getElementById('li_last').value.trim();
+  const pass=document.getElementById('li_pass').value;
+  const msg=document.getElementById('li_msg'); msg.textContent='';
+  const users=getUsers();
+  const user=users.find(u=>u.first.toLowerCase()===first.toLowerCase()&&u.last.toLowerCase()===last.toLowerCase()&&u.pass===pass);
+  if(!user){msg.textContent='Wrong credentials.';return}
+  setCurrent({userId:user.id}); renderApp();
+}
+
+function logout(){clearCurrent();document.getElementById('mainApp').classList.add('hidden');document.getElementById('authPages').classList.remove('hidden')}
+
+// --- APP ---
+function renderApp(){
+  const cur=getCurrent();
+  if(!cur){document.getElementById('authPages').classList.remove('hidden');document.getElementById('mainApp').classList.add('hidden');return}
+  const users=getUsers(); const user=users.find(u=>u.id===cur.userId);
+  if(!user){logout();return}
+  document.getElementById('authPages').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  document.getElementById('welcome').textContent = `Welcome, ${user.first} ${user.last}`;
+  document.getElementById('clubName').textContent = user.club || '';
+  document.getElementById('clubLogoPreview').src = user.clubLogo||'';
+  document.getElementById('p_position').value = user.profile.position||'';
+  document.getElementById('p_number').value = user.profile.number||'';
+  document.getElementById('p_foot').value = user.profile.foot||'Right';
+  renderMatches(user);
+  renderStats(user);
+}
+
+function saveProfile(){
+  const cur=getCurrent(); const users=getUsers(); const user=users.find(u=>u.id===cur.userId);
+  user.profile.position=document.getElementById('p_position').value.trim();
+  user.profile.number=document.getElementById('p_number').value;
+  user.profile.foot=document.getElementById('p_foot').value;
+  const file=document.getElementById('p_uploadlogo').files[0];
+  fileToDataUrl(file, data=>{ if(data){user.clubLogo=data} saveUsers(users); renderApp(); document.getElementById('profile_msg').textContent='Profile saved.'; setTimeout(()=>document.getElementById('profile_msg').textContent='',1500); });
+}
+
+// --- MATCHES ---
+function showCreateMatchDialog(){document.getElementById('createMatch').classList.remove('hidden')}
+function hideCreateMatchDialog(){document.getElementById('createMatch').classList.add('hidden')}
+let currentEditId = null;
+function createMatch(){
+  const cur=getCurrent(); const users=getUsers(); const user=users.find(u=>u.id===cur.userId);
+  const opponent=document.getElementById('m_opponent').value.trim();
+  const venue=document.getElementById('m_venue').value.trim();
+  const comp=document.getElementById('m_comp').value;
+  const scoreYou=Number(document.getElementById('m_score_you').value||0);
+  const scoreOpp=Number(document.getElementById('m_score_opp').value||0);
+  const oppLogoFile=document.getElementById('m_oplogo').files[0];
+  if(!opponent||!venue){document.getElementById('create_msg').textContent='Fill opponent and venue.';return}
+  fileToDataUrl(oppLogoFile, data=>{
+    const match={id:Date.now(),date:new Date().toISOString().slice(0,10),status:'played',opponent,venue,competition:comp,scoreYou,scoreOpp,oppLogo:data||null,rating:0};
+    match.rating=computeRating(match);
+    user.matches.push(match);
+    saveUsers(users); hideCreateMatchDialog(); renderMatches(user); renderStats(user);
+  })
+}
+
+function renderMatches(user){
+  const list=document.getElementById('matchesList'); list.innerHTML='';
+  user.matches.forEach(m=>{
+    const div=document.createElement('div'); div.className='card'; div.style.margin='8px 0';
+    div.innerHTML=`
+      <div style="display:flex;align-items:center;gap:12px">
+        <img src="${m.oppLogo||''}" class="logo-preview">
+        <div style="flex:1">
+          <strong>${m.opponent}</strong> (${m.competition}) — ${m.venue} — ${m.date} — ${m.status} <br>
+          Score: ${m.scoreYou} - ${m.scoreOpp} | Rating: ${m.rating}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="openMatchEditor(${m.id})">Edit</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(div);
+  })
+}
+
+function computeRating(match){
+  if(match.status!=='played') return 0;
+  if(match.scoreYou>match.scoreOpp) return 3;
+  if(match.scoreYou===match.scoreOpp) return 1;
+  return 0;
+}
+
+// --- EDIT MATCH LOGIC ---
+function openMatchEditor(matchId){
+  const cur = getCurrent(); 
+  const user = getUsers().find(u=>u.id===cur.userId);
+  const match = user.matches.find(m=>m.id===matchId);
+  if(!match) return;
+  currentEditId = matchId;
+
+  document.getElementById('editMatch').classList.remove('hidden');
+  document.getElementById('e_date').value = match.date;
+  document.getElementById('e_status').value = match.status;
+  document.getElementById('e_opponent').value = match.opponent;
+  document.getElementById('e_venue').value = match.venue;
+  document.getElementById('e_comp').value = match.competition;
+  document.getElementById('e_score_you').value = match.scoreYou;
+  document.getElementById('e_score_opp').value = match.scoreOpp;
+}
+
+function hideEditMatch(){document.getElementById('editMatch').classList.add('hidden');currentEditId=null}
+
+function saveEditedMatch(){
+  if(currentEditId===null) return;
+  const cur = getCurrent();
+  const users = getUsers();
+  const user = users.find(u=>u.id===cur.userId);
+  const match = user.matches.find(m=>m.id===currentEditId);
+  if(!match) return;
+
+  match.date = document.getElementById('e_date').value;
+  match.status = document.getElementById('e_status').value;
+  match.opponent = document.getElementById('e_opponent').value.trim();
+  match.venue = document.getElementById('e_venue').value.trim();
+  match.competition = document.getElementById('e_comp').value;
+  match.scoreYou = parseInt(document.getElementById('e_score_you').value||0);
+  match.scoreOpp = parseInt(document.getElementById('e_score_opp').value||0);
+
+  const file = document.getElementById('e_oplogo').files[0];
+  fileToDataUrl(file, data=>{
+    if(data) match.oppLogo = data;
+    match.rating = computeRating(match);
+    saveUsers(users); hideEditMatch(); renderMatches(user); renderStats(user);
+  });
+}
+
+// --- STATS ---
+function renderStats(user){
+  const sumDiv=document.getElementById('statsSummary'); sumDiv.innerHTML='';
+  const played=user.matches.filter(m=>m.status==='played');
+  const won=played.filter(m=>m.scoreYou>m.scoreOpp).length;
+  const draw=played.filter(m=>m.scoreYou===m.scoreOpp).length;
+  const lost=played.filter(m=>m.scoreYou< m.scoreOpp).length;
+  const gf=played.reduce((a,m)=>a+m.scoreYou,0);
+  const ga=played.reduce((a,m)=>a+m.scoreOpp,0);
+  const pts=played.reduce((a,m)=>a+computeRating(m),0);
+  sumDiv.innerHTML=`
+    Played: ${played.length} | Won: ${won} | Draw: ${draw} | Lost: ${lost} | GF: ${gf} | GA: ${ga} | PTS: ${pts}
+  `;
+}
+
+document.getElementById('nav_profile_btn').onclick=()=>{showPage('profile')}
+document.getElementById('nav_matches_btn').onclick=()=>{showPage('matches')}
+document.getElementById('nav_stats_btn').onclick=()=>{showPage('stats')}
+document.getElementById('nav_team_btn').onclick=()=>{showPage('team')}
+
+function showPage(p){
+  document.getElementById('profilePage').classList.add('hidden');
+  document.getElementById('matchesPage').classList.add('hidden');
+  document.getElementById('statsPage').classList.add('hidden');
+  document.getElementById('teamPage').classList.add('hidden');
+  if(p==='profile') document.getElementById('profilePage').classList.remove('hidden');
+  if(p==='matches') document.getElementById('matchesPage').classList.remove('hidden');
+  if(p==='stats') document.getElementById('statsPage').classList.remove('hidden');
+  if(p==='team') document.getElementById('teamPage').classList.remove('hidden');
+}
+
+renderApp();
+</script>
+</body>
+</html>
